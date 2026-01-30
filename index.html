@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training Log Tracker</title>
+    <style>
+        :root {
+            --color-bg-base: #0f172a;
+            --color-bg-elevated: #020617;
+            --color-bg-surface: #1e293b;
+            --color-bg-muted: #334155;
+            --color-text-primary: #f1f5f9;
+            --color-text-secondary: #cbd5e1;
+            --color-text-muted: #94a3b8;
+            --color-text-accent: #38bdf8;
+            --color-primary: #38bdf8;
+            --color-primary-hover: #0ea5e9;
+            --color-success: #10b981;
+            --color-error: #ef4444;
+            --color-warning: #f59e0b;
+        }
+
+        @media (prefers-color-scheme: light) {
+            :root {
+                --color-bg-base: #ffffff;
+                --color-bg-elevated: #f8fafc;
+                --color-bg-surface: #f1f5f9;
+                --color-bg-muted: #e2e8f0;
+                --color-text-primary: #0f172a;
+                --color-text-secondary: #475569;
+                --color-text-muted: #64748b;
+                --color-text-accent: #0284c7;
+                --color-primary: #0284c7;
+                --color-primary-hover: #0369a1;
+                --color-success: #059669;
+                --color-error: #dc2626;
+                --color-warning: #d97706;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--color-bg-base);
+            color: var(--color-text-primary);
+            padding: 2rem;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: var(--color-text-accent);
+        }
+
+        .subtitle {
+            color: var(--color-text-secondary);
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background: var(--color-bg-surface);
+            border-radius: 12px;
+            padding: 1.5rem;
+            border: 1px solid var(--color-bg-muted);
+        }
+
+        .card h2 {
+            font-size: 1.25rem;
+            margin-bottom: 1rem;
+            color: var(--color-text-accent);
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            color: var(--color-text-secondary);
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--color-bg-base);
+            border: 1px solid var(--color-bg-muted);
+            border-radius: 8px;
+            color: var(--color-text-primary);
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--color-primary);
+        }
+
+        button {
+            width: 100%;
+            padding: 0.75rem;
+            background: var(--color-primary);
+            color: var(--color-bg-base);
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        button:hover {
+            background: var(--color-primary-hover);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card {
+            background: var(--color-bg-base);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--color-bg-muted);
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--color-text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 0.25rem;
+        }
+
+        .stat-value.positive {
+            color: var(--color-success);
+        }
+
+        .stat-value.negative {
+            color: var(--color-error);
+        }
+
+        .stat-value.neutral {
+            color: var(--color-text-accent);
+        }
+
+        .table-container {
+            overflow-x: auto;
+            margin-top: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        th, td {
+            padding: 0.75rem;
+            text-align: left;
+            border-bottom: 1px solid var(--color-bg-muted);
+        }
+
+        th {
+            color: var(--color-text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+        }
+
+        tr:hover {
+            background: var(--color-bg-base);
+        }
+
+        .diff-positive {
+            color: var(--color-error);
+        }
+
+        .diff-negative {
+            color: var(--color-success);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--color-text-muted);
+        }
+
+        .message {
+            padding: 0.75rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            font-size: 0.875rem;
+        }
+
+        .message.success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--color-success);
+            border: 1px solid var(--color-success);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Training Log Tracker</h1>
+        <p class="subtitle">Input training runs, track performance, and monitor progress against targets</p>
+
+        <div class="grid">
+            <div class="card">
+                <h2>Add Training Run</h2>
+                <form id="runForm">
+                    <div class="form-group">
+                        <label for="week">Week</label>
+                        <select id="week" required>
+                            <option value="">Select week...</option>
+                            <option value="Feb W1 (Y05)">Feb W1 (Y05)</option>
+                            <option value="Feb W2 (Y06)">Feb W2 (Y06)</option>
+                            <option value="Feb W3 (Y07)">Feb W3 (Y07)</option>
+                            <option value="Feb W4 (Y08)">Feb W4 (Y08)</option>
+                            <option value="Mar W1 (W09)">Mar W1 (W09)</option>
+                            <option value="Mar W2 (W10)">Mar W2 (W10)</option>
+                            <option value="Mar W3 (W11)">Mar W3 (W11)</option>
+                            <option value="Mar W4 (W12)">Mar W4 (W12)</option>
+                            <option value="Apr W1 (W13)">Apr W1 (W13)</option>
+                            <option value="Apr W2 (W14)">Apr W2 (W14)</option>
+                            <option value="Apr W3 (W15)">Apr W3 (W15)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="runId">Run ID</label>
+                        <input type="number" id="runId" placeholder="e.g., 1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="runType">Run Type</label>
+                        <select id="runType" required>
+                            <option value="">Select type...</option>
+                            <option value="Type_Standard">Type_Standard</option>
+                            <option value="Type_Upupup">Type_Upupup</option>
+                            <option value="Type_LongTrail">Type_LongTrail</option>
+                            <option value="Type_intervals">Type_intervals</option>
+                            <option value="Type_Zatopek(low)">Type_Zatopek(low)</option>
+                            <option value="Type_Up&Furious">Type_Up&Furious</option>
+                            <option value="Type_Long_Night">Type_Long_Night</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="distance">Distance (km)</label>
+                        <input type="number" id="distance" step="0.1" placeholder="e.g., 10.5" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="vert">Vertical Gain (m)</label>
+                        <input type="number" id="vert" placeholder="e.g., 500" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="tiredness">Tiredness (0-10)</label>
+                        <select id="tiredness" required>
+                            <option value="">Select level...</option>
+                            <option value="0">0 - Fresh</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10 - Exhausted</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="effort">Effort (0-10)</label>
+                        <select id="effort" required>
+                            <option value="">Select level...</option>
+                            <option value="0">0 - Very Easy</option>
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                            <option value="6">6</option>
+                            <option value="7">7</option>
+                            <option value="8">8</option>
+                            <option value="9">9</option>
+                            <option value="10">10 - Maximum</option>
+                        </select>
+                    </div>
+                    <button type="submit">Add Run</button>
+                </form>
+            </div>
+
+            <div class="card">
+                <h2>Performance Overview</h2>
+                <div id="message"></div>
+                <div class="stats">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Runs</div>
+                        <div class="stat-value neutral" id="totalRuns">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Accumulated Distance</div>
+                        <div class="stat-value neutral" id="accumulatedDistance">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Accumulated Vert</div>
+                        <div class="stat-value neutral" id="accumulatedVert">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Current Week</div>
+                        <div class="stat-value neutral" id="currentWeek">-</div>
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 1.5rem; margin-bottom: 0.5rem;">
+                    <h3 style="font-size: 1rem; color: var(--color-text-secondary); margin: 0;">Recent Runs</h3>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button onclick="window.exportToCSV()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.875rem; background: var(--color-success);">Export CSV</button>
+                        <button onclick="window.importFromCSV()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.875rem; background: var(--color-warning);">Import CSV</button>
+                        <button onclick="window.clearAllData()" style="width: auto; padding: 0.5rem 1rem; font-size: 0.875rem; background: var(--color-error);">Clear All</button>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table id="runsTable">
+                        <thead>
+                            <tr>
+                                <th>Week</th>
+                                <th>Run ID</th>
+                                <th>Type</th>
+                                <th>Distance</th>
+                                <th>Vert</th>
+                                <th>Avg Incline %</th>
+                                <th>Tiredness</th>
+                                <th>Effort</th>
+                                <th>Dist Diff</th>
+                                <th>Vert Diff</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr>
+                                <td colspan="10" class="empty-state">No runs yet. Add your first training run above!</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let runs = [];
+
+        // Load data from localStorage on startup
+        function loadData() {
+            const saved = localStorage.getItem('trainingRuns');
+            if (saved) {
+                runs = JSON.parse(saved);
+                updateDisplay();
+            }
+        }
+
+        // Save data to localStorage
+        function saveData() {
+            localStorage.setItem('trainingRuns', JSON.stringify(runs));
+        }
+
+        // Training targets by week (distance in km, vert in meters) - using midpoint of ranges
+        const targets = {
+            'Feb W1 (Y05)': { distance: 35, vert: 1000 },
+            'Feb W2 (Y06)': { distance: 45, vert: 1350 },
+            'Feb W3 (Y07)': { distance: 50, vert: 1550 },
+            'Feb W4 (Y08)': { distance: 55, vert: 1650 },
+            'Mar W1 (W09)': { distance: 62.5, vert: 2000 },
+            'Mar W2 (W10)': { distance: 72.5, vert: 2400 },
+            'Mar W3 (W11)': { distance: 90, vert: 3150 },
+            'Mar W4 (W12)': { distance: 100, vert: 3600 },
+            'Apr W1 (W13)': { distance: 77.5, vert: 2700 },
+            'Apr W2 (W14)': { distance: 57.5, vert: 2100 },
+            'Apr W3 (W15)': { distance: 37.5, vert: 1250 }
+        };
+
+        const form = document.getElementById('runForm');
+        const tableBody = document.getElementById('tableBody');
+        const messageDiv = document.getElementById('message');
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            addRun();
+        });
+
+        function addRun() {
+            const week = document.getElementById('week').value;
+            const runId = parseInt(document.getElementById('runId').value);
+            const runType = document.getElementById('runType').value;
+            const distance = parseFloat(document.getElementById('distance').value);
+            const vert = parseFloat(document.getElementById('vert').value);
+            const tiredness = parseInt(document.getElementById('tiredness').value);
+            const effort = parseInt(document.getElementById('effort').value);
+
+            const target = targets[week];
+            const distDiff = distance - target.distance;
+            const vertDiff = vert - target.vert;
+
+            const run = {
+                week,
+                runId,
+                runType,
+                timestamp: new Date().toISOString(),
+                distance,
+                vert,
+                tiredness,
+                effort,
+                targetDistance: target.distance,
+                targetVert: target.vert,
+                distDiff,
+                vertDiff
+            };
+
+            runs.push(run);
+            runs.sort((a, b) => a.runId - b.runId);
+            saveData();
+            updateDisplay();
+            showMessage('Run added successfully!');
+            form.reset();
+        }
+
+        function updateDisplay() {
+            updateStats();
+            updateTable();
+        }
+
+        function updateStats() {
+            const totalRuns = runs.length;
+            document.getElementById('totalRuns').textContent = totalRuns;
+
+            if (totalRuns > 0) {
+                const accumulatedDistance = runs.reduce((sum, r) => sum + r.distance, 0);
+                const accumulatedVert = runs.reduce((sum, r) => sum + r.vert, 0);
+                const lastWeek = runs[runs.length - 1].week;
+
+                document.getElementById('accumulatedDistance').textContent = accumulatedDistance.toFixed(1) + ' km';
+                document.getElementById('accumulatedVert').textContent = accumulatedVert.toFixed(0) + ' m';
+                document.getElementById('currentWeek').textContent = lastWeek;
+            }
+        }
+
+        function updateTable() {
+            if (runs.length === 0) {
+                tableBody.innerHTML = '<tr><td colspan="11" class="empty-state">No runs yet. Add your first training run above!</td></tr>';
+                return;
+            }
+
+            // Calculate cumulative distances and verts per week
+            const weeklyAccumulated = {};
+            runs.forEach(run => {
+                if (!weeklyAccumulated[run.week]) {
+                    weeklyAccumulated[run.week] = { distance: 0, vert: 0 };
+                }
+                weeklyAccumulated[run.week].distance += run.distance;
+                weeklyAccumulated[run.week].vert += run.vert;
+            });
+
+            tableBody.innerHTML = runs.slice().reverse().map((run, index) => {
+                const avgIncline = run.distance > 0 ? ((run.vert / (run.distance * 1000)) * 100).toFixed(1) : 0;
+                const weekAccum = weeklyAccumulated[run.week];
+                const target = targets[run.week];
+                const distDiff = weekAccum.distance - target.distance;
+                const vertDiff = weekAccum.vert - target.vert;
+
+                return `
+                <tr>
+                    <td>${run.week}</td>
+                    <td>${run.runId}</td>
+                    <td>${run.runType}</td>
+                    <td>${run.distance.toFixed(1)} km</td>
+                    <td>${run.vert} m</td>
+                    <td>${avgIncline}%</td>
+                    <td>${run.tiredness}/10</td>
+                    <td>${run.effort}/10</td>
+                    <td class="${distDiff < 0 ? 'diff-negative' : 'diff-positive'}">${distDiff > 0 ? '+' : ''}${distDiff.toFixed(1)} km</td>
+                    <td class="${vertDiff < 0 ? 'diff-negative' : 'diff-positive'}">${vertDiff > 0 ? '+' : ''}${vertDiff.toFixed(0)} m</td>
+                    <td><button onclick="window.removeRunById(${run.runId})" style="padding: 0.25rem 0.5rem; font-size: 0.75rem; background: var(--color-error); color: white; border: none; border-radius: 4px; cursor: pointer;">Remove</button></td>
+                </tr>
+                `;
+            }).join('');
+        }
+
+        window.removeRunById = function(runId) {
+            if (confirm(`Are you sure you want to remove run ${runId}?`)) {
+                runs = runs.filter(r => r.runId !== runId);
+                saveData();
+                updateDisplay();
+                showMessage('Run removed successfully!');
+            }
+        }
+
+        // Export to CSV
+        window.exportToCSV = function() {
+            if (runs.length === 0) {
+                alert('No data to export!');
+                return;
+            }
+            
+            const headers = ['Week', 'Run ID', 'Type', 'Distance (km)', 'Vert (m)', 'Avg Incline %', 'Tiredness', 'Effort', 'Timestamp'];
+            const csvRows = [headers.join(',')];
+            
+            runs.forEach(run => {
+                const avgIncline = run.distance > 0 ? ((run.vert / (run.distance * 1000)) * 100).toFixed(1) : 0;
+                const row = [
+                    run.week,
+                    run.runId,
+                    run.runType,
+                    run.distance,
+                    run.vert,
+                    avgIncline,
+                    run.tiredness,
+                    run.effort,
+                    run.timestamp
+                ];
+                csvRows.push(row.join(','));
+            });
+            
+            const csvContent = csvRows.join('\n');
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `training-log-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Import from CSV
+        window.importFromCSV = function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.csv';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const lines = event.target.result.split('\n');
+                        const imported = [];
+                        
+                        for (let i = 1; i < lines.length; i++) {
+                            const line = lines[i].trim();
+                            if (!line) continue;
+                            
+                            const [week, runId, runType, distance, vert, avgIncline, tiredness, effort, timestamp] = line.split(',');
+                            const target = targets[week];
+                            
+                            imported.push({
+                                week,
+                                runId: parseInt(runId),
+                                runType,
+                                distance: parseFloat(distance),
+                                vert: parseFloat(vert),
+                                tiredness: parseInt(tiredness),
+                                effort: parseInt(effort),
+                                timestamp,
+                                targetDistance: target.distance,
+                                targetVert: target.vert,
+                                distDiff: parseFloat(distance) - target.distance,
+                                vertDiff: parseFloat(vert) - target.vert
+                            });
+                        }
+                        
+                        if (confirm(`Import ${imported.length} runs? This will replace your current data.`)) {
+                            runs = imported;
+                            runs.sort((a, b) => a.runId - b.runId);
+                            saveData();
+                            updateDisplay();
+                            showMessage(`Imported ${imported.length} runs successfully!`);
+                        }
+                    } catch (error) {
+                        alert('Error importing CSV: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+            input.click();
+        }
+
+        // Clear all data
+        window.clearAllData = function() {
+            if (confirm('Are you sure you want to delete ALL training data? This cannot be undone!')) {
+                if (confirm('Really sure? This will permanently delete all your runs.')) {
+                    runs = [];
+                    saveData();
+                    updateDisplay();
+                    showMessage('All data cleared!');
+                }
+            }
+        }
+
+        // Initialize on page load
+        loadData();
+
+        function showMessage(text) {
+            messageDiv.innerHTML = `<div class="message success">${text}</div>`;
+            setTimeout(() => {
+                messageDiv.innerHTML = '';
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
+
